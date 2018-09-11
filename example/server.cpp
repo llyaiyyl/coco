@@ -1,17 +1,27 @@
 #include <iostream>
+#include <string.h>
 
+#include "endpoint.h"
 #include "tcp.h"
 
 using namespace std;
 
 class ser_edp : public endpoint
 {
+public:
+    ser_edp(int fd) : endpoint(fd) {}
+    ~ser_edp()
+    {
+        cout << "ser_edp distroy" << endl;
+    }
+
 protected:
     void on_recv_data(const void * data, size_t len)
     {
-        // data[len] = 0;
+        memcpy(rbuff, data, len);
+        rbuff[len] = 0;
+        cout << "recv: " << rbuff << endl;
 
-        // cout << "recv: " << data << endl;
         this->send_data("coco", 4);
     }
 
@@ -22,26 +32,32 @@ protected:
 
     void on_connect(int32_t fd)
     {
-        cout << "client connect" << endl;
+        cout << "client " << this->get_remote_ip() << ":"
+             << this->get_remote_port() << endl;
     }
 
     void on_close(void)
     {
-        cout << "client close" << endl;
+        cout << "client has close" << endl;
     }
+
+private:
+    char rbuff[1024];
 };
 
 
 int main(int argc, char * argv[])
 {
+    int32_t sockfd;
     tcp s;
-    endpoint * edp;
+    ser_edp * sedp;
 
     s.Bind(4000);
     while(1) {
-        edp = s.Accept();
-        if(edp) {
-            edp->run();
+        sockfd = s.Accept();
+        if(-1 != sockfd) {
+            sedp = new ser_edp(sockfd);
+            sedp->run();
         }
     }
 

@@ -1,47 +1,29 @@
 #include <iostream>
 
+#include "endpoint.h"
 #include "tcp.h"
 
 using namespace std;
 
-class cli_edp : public endpoint
-{
-protected:
-    void on_recv_data(const void * data, size_t len)
-    {
-        // data[len] = 0;
-        // cout << "recv: " << data << endl;
-
-        this->quit();
-    }
-
-    void on_recv_error(void)
-    {
-        cout << "rev error" << endl;
-    }
-
-    void on_connect(int32_t fd)
-    {
-        cout << "client connect" << endl;
-        cout << "send data to server" << endl;
-        this->send_data("hello", 5);
-    }
-
-    void on_close(void)
-    {
-        cout << "client close" << endl;
-    }
-};
-
 int main(int argc, char * argv[])
 {
+    char recv_buff[1024];
+    ssize_t recv_n;
+
+    int32_t sockfd;
     tcp s;
     endpoint * edp;
 
-    edp = s.Connect("0.0.0.0", 4000);
-    if(edp) {
-        edp->run();
-        edp->wait();
+    sockfd = s.Connect("0.0.0.0", 4000);
+    if(-1 != sockfd) {
+        edp = new endpoint(sockfd);
+
+        edp->send_data("ping", 4);
+        cout << "send msg to server" << endl;
+
+        recv_n = edp->recv_data(recv_buff, 1024);
+        recv_buff[recv_n] = 0;
+        cout << recv_buff << endl;
     }
 
     return 0;

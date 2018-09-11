@@ -6,11 +6,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
-#include "endpoint.h"
-
 
 class tcp
 {
@@ -20,18 +18,21 @@ public:
 
     /*
      * connect to remote ip addr, use for tcp client
+     * return: socket fd
      */
-    endpoint * Connect(const char * ipstr, uint16_t port);
+    int32_t Connect(const char * ipstr, uint16_t port);
 
     /*
      * bind local port, use for tcp server
+     * return 0 = ok, -1 = error
      */
     int32_t Bind(uint16_t port);
 
     /*
-     * run as server, return endpoint
+     * run as server
+     * return: socket fd
      */
-    endpoint * Accept();
+    int32_t Accept();
 
 private:
     void saddr_init(struct sockaddr_in &saddr, const char * ipstr, uint16_t port);

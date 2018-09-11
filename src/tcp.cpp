@@ -1,5 +1,4 @@
 #include "tcp.h"
-
 using namespace std;
 
 tcp::tcp()
@@ -13,6 +12,25 @@ tcp::~tcp()
         close(m_sockfd);
         m_sockfd = -1;
     }
+}
+
+int32_t tcp::Connect(const char *ipstr, uint16_t port)
+{
+    int32_t ret;
+    struct sockaddr_in saddr;
+
+    m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if(-1 == m_sockfd) {
+        return -1;
+    }
+    saddr_init(saddr, ipstr, port);
+
+    ret = connect(m_sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
+    if(-1 == ret) {
+        return -1;
+    }
+
+    return m_sockfd;
 }
 
 int32_t tcp::Bind(uint16_t port)
@@ -34,26 +52,7 @@ int32_t tcp::Bind(uint16_t port)
     return 0;
 }
 
-endpoint * tcp::Connect(const char *ipstr, uint16_t port)
-{
-    int32_t ret;
-    struct sockaddr_in saddr;
-
-    m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(-1 == m_sockfd) {
-        return NULL;
-    }
-    saddr_init(saddr, ipstr, port);
-
-    ret = connect(m_sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
-    if(-1 == ret) {
-        return NULL;
-    }
-
-    return new endpoint(m_sockfd);
-}
-
-endpoint * tcp::Accept()
+int32_t tcp::Accept()
 {
     int fd;
 
@@ -65,11 +64,9 @@ endpoint * tcp::Accept()
             sleep(10);
             continue ;
         }
-        return new endpoint(fd);
+        return fd;
     }
 }
-
-
 
 // private function
 void tcp::saddr_init(struct sockaddr_in &saddr, const char *ipstr, uint16_t port)
