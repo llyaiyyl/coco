@@ -1,71 +1,61 @@
 #include "tcp.h"
-using namespace std;
-
-tcp::tcp()
-{
-    m_sockfd = -1;
-}
-
-tcp::~tcp()
-{
-    if(-1 == m_sockfd) {
-        close(m_sockfd);
-        m_sockfd = -1;
-    }
-}
 
 int32_t tcp::Connect(const char *ipstr, uint16_t port)
 {
-    int32_t ret;
+    int32_t fd, ret;
     struct sockaddr_in saddr;
 
-    m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(-1 == m_sockfd) {
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(-1 == fd) {
+        perror("socket");
         return -1;
     }
     saddr_init(saddr, ipstr, port);
 
-    ret = connect(m_sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
+    ret = connect(fd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
     if(-1 == ret) {
+        perror("connect");
         return -1;
     }
 
-    return m_sockfd;
+    return fd;
 }
 
-int32_t tcp::Bind(uint16_t port)
+ssize_t tcp::Read(int32_t fd, void *buff, size_t n)
 {
-    int32_t ret;
+    return read(fd, buff, n);
+}
+
+ssize_t tcp::Write(int32_t fd, const void *buff, size_t n)
+{
+    return write(fd, buff, n);
+}
+
+int32_t tcp::Listen(uint16_t port)
+{
+    int32_t fd, ret;
     struct sockaddr_in saddr;
 
-    m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(-1 == m_sockfd) {
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(-1 == fd) {
+        perror("socket");
         return -1;
     }
     saddr_init(saddr, "0.0.0.0", port);
 
-    ret = bind(m_sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
+    ret = bind(fd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
     if(-1 == ret) {
+        perror("bind");
         return -1;
     }
 
-    return 0;
-}
-
-int32_t tcp::Accept()
-{
-    int fd;
-
-    listen(m_sockfd, 5);
-    while(1) {
-        fd = accept(m_sockfd, NULL, NULL);
-        if(-1 == fd) {
-            cerr << "accept error, wait 10s" << endl;
-            sleep(10);
-            continue ;
-        }
-        return fd;
+    ret = listen(fd, 5);
+    if(-1 == ret) {
+        perror("listen");
+        return -1;
     }
+
+    return fd;
 }
 
 // private function

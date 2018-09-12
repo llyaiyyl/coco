@@ -1,65 +1,68 @@
 #include <iostream>
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
 
-#include "endpoint.h"
 #include "tcp.h"
+#include "reactor.h"
+#include "event_handler.h"
 
-using namespace std;
-
-class ser_edp : public endpoint
+class handler : public event_handler
 {
 public:
-    ser_edp(int fd) : endpoint(fd) {}
-    ~ser_edp()
+    handler() {}
+
+    void on_connect(int fd, void ** pdata)
     {
-        cout << "ser_edp distroy" << endl;
-    }
+        struct sockaddr_in saddr;
+        socklen_t slen;
+        char ipstr[INET_ADDRSTRLEN];
+        uint16_t port;
+        char buff[30];
 
-protected:
-    void on_recv_data(const void * data, size_t len)
+        slen = sizeof(struct sockaddr_in);
+        bzero(&saddr, slen);
+        if(0 == getpeername(fd, (struct sockaddr *)&saddr, &slen)) {
+            port = ntohs(saddr.sin_port);
+            inet_ntop(saddr.sin_family, &(saddr.sin_addr.s_addr), ipstr, INET_ADDRSTRLEN);
+        } else {
+            ipstr[0] = 0;
+            port = 0;
+        }
+
+        sprintf(buff, "%s:%d", ipstr, port);
+        *pdata = new std::string(buff);
+
+        std::cout << "client connect: " << *(std::string *)(*pdata) << std::endl;
+    }
+    void on_read_err(int fd, void * pdata, int err)
     {
-        memcpy(rbuff, data, len);
-        rbuff[len] = 0;
-        cout << "recv: " << rbuff << endl;
-
-        this->send_data("coco", 4);
+        errno = err;
+        perror("on_read_err");
     }
-
-    void on_recv_error(void)
+    void on_read(int fd, void * pdata, const void * rbuff, size_t rn)
     {
-        cout << "rev error" << endl;
-    }
+        std::string str((char *)rbuff, rn);
+        std::cout << *(std::string *)pdata << " " << str.c_str() << std::endl;
 
-    void on_connect(int32_t fd)
+        write(fd, str.c_str(), str.size());
+    }
+    void on_close(int fd, void * pdata)
     {
-        cout << "client " << this->get_remote_ip() << ":"
-             << this->get_remote_port() << endl;
+        std::cout << "on_close: " << *(std::string *)pdata << std::endl;
     }
-
-    void on_close(void)
-    {
-        cout << "client has close" << endl;
-    }
-
-private:
-    char rbuff[1024];
 };
 
 
 int main(int argc, char * argv[])
 {
     int32_t sockfd;
-    tcp s;
-    ser_edp * sedp;
+    handler hd;
+    reactor * r;
 
-    s.Bind(4000);
-    while(1) {
-        sockfd = s.Accept();
-        if(-1 != sockfd) {
-            sedp = new ser_edp(sockfd);
-            sedp->run();
-        }
-    }
+    sockfd = tcp::Listen(4000);
+    r = reactor::create(sockfd, 128, hd);
+    r->run();
 
     return 0;
 }

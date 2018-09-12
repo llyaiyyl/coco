@@ -1,29 +1,29 @@
 #include <iostream>
-
-#include "endpoint.h"
+#include <unistd.h>
 #include "tcp.h"
-
-using namespace std;
 
 int main(int argc, char * argv[])
 {
-    char recv_buff[1024];
-    ssize_t recv_n;
+    char rbuff[1024];
+    ssize_t rn;
+    int32_t sockfd, num;
 
-    int32_t sockfd;
-    tcp s;
-    endpoint * edp;
-
-    sockfd = s.Connect("0.0.0.0", 4000);
+    sockfd = tcp::Connect("0.0.0.0", 4000);
     if(-1 != sockfd) {
-        edp = new endpoint(sockfd);
+        num = 0;
+        while(num <= 20) {
+            tcp::Write(sockfd, "ping", 4);
+            std::cout << "send msg to server" << std::endl;
 
-        edp->send_data("ping", 4);
-        cout << "send msg to server" << endl;
+            rn = tcp::Read(sockfd, rbuff, 1024);
+            rbuff[rn] = 0;
+            std::cout << rbuff << std::endl;
 
-        recv_n = edp->recv_data(recv_buff, 1024);
-        recv_buff[recv_n] = 0;
-        cout << recv_buff << endl;
+            sleep(3);
+            num++;
+        }
+
+        close(sockfd);
     }
 
     return 0;
