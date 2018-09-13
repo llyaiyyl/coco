@@ -116,7 +116,15 @@ void reactor::run()
                         epoll_ctl(fd_epoll_, EPOLL_CTL_DEL, fd_client, &events_[i]);
                         close(fd_client);
                     } else {
+                        int fd_bk = fd_client;
+
                         ev_handler_->on_read(fd_client, ((struct ev_data *)(events_[i].data.ptr))->ptr, buff_, rn);
+                        if(-1 == fd_client) {
+                            fd_client = fd_bk;
+
+                            epoll_ctl(fd_epoll_, EPOLL_CTL_DEL, fd_client, &events_[i]);
+                            close(fd_client);
+                        }
                     }
                 } else if(events_[i].events & EPOLLOUT) {
 

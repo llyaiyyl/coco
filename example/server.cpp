@@ -10,9 +10,12 @@
 class handler : public event_handler
 {
 public:
-    handler() {}
+    handler()
+    {
+        time = 0;
+    }
 
-    void on_connect(int fd, void ** pdata)
+    void on_connect(int &fd, void ** pdata)
     {
         struct sockaddr_in saddr;
         socklen_t slen;
@@ -35,22 +38,32 @@ public:
 
         std::cout << "client connect: " << *(std::string *)(*pdata) << std::endl;
     }
-    void on_read_err(int fd, void * pdata, int err)
+    void on_read_err(int &fd, void * pdata, int err)
     {
         errno = err;
         perror("on_read_err");
     }
-    void on_read(int fd, void * pdata, const void * rbuff, size_t rn)
+    void on_read(int &fd, void * pdata, const void * rbuff, size_t rn)
     {
         std::string str((char *)rbuff, rn);
         std::cout << *(std::string *)pdata << " " << str.c_str() << std::endl;
 
         write(fd, str.c_str(), str.size());
+
+        time++;
+        if(time >= 10) {
+            // need to close
+            fd = -1;
+            time = 0;
+        }
     }
-    void on_close(int fd, void * pdata)
+    void on_close(int &fd, void * pdata)
     {
         std::cout << "on_close: " << *(std::string *)pdata << std::endl;
     }
+
+private:
+    uint32_t time;
 };
 
 

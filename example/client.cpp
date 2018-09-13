@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <errno.h>
 #include "tcp.h"
 
 int main(int argc, char * argv[])
@@ -16,8 +17,16 @@ int main(int argc, char * argv[])
             std::cout << "send msg to server" << std::endl;
 
             rn = tcp::Read(sockfd, rbuff, 1024);
-            rbuff[rn] = 0;
-            std::cout << rbuff << std::endl;
+            if(rn < 0) {
+                perror("read");
+                continue ;
+            } else if(0 == rn) {
+                perror("server close");
+                break;
+            } else {
+                rbuff[rn] = 0;
+                std::cout << rbuff << std::endl;
+            }
 
             sleep(3);
             num++;
