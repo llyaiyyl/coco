@@ -48,6 +48,7 @@ public:
         std::string str((char *)rbuff, rn);
         std::cout << *(std::string *)pdata << " " << str.c_str() << std::endl;
 
+        str = std::string("pong");
         write(fd, str.c_str(), str.size());
 
         time++;

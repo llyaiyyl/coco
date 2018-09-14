@@ -31,6 +31,30 @@ ssize_t tcp::Write(int32_t fd, const void *buff, size_t n)
     return write(fd, buff, n);
 }
 
+std::string tcp::Read(int32_t fd, size_t n)
+{
+    char * buff  = new char [n];
+    ssize_t rn;
+    std::string str;
+
+    rn = read(fd, buff, n);
+    if(rn < 0) {
+        perror("read");
+    } else if(0 == rn) {
+        perror("server close");
+    } else {
+        str = std::string(buff, rn);
+    }
+
+    delete [] buff;
+    return str;
+}
+
+ssize_t tcp::Write(int32_t fd, const std::string &str)
+{
+    return write(fd, str.c_str(), str.length());
+}
+
 int32_t tcp::Listen(uint16_t port)
 {
     int32_t fd, ret;

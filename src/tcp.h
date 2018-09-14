@@ -24,6 +24,9 @@ public:
     static ssize_t Read(int32_t fd, void * buff, size_t n);
     static ssize_t Write(int32_t fd, const void * buff, size_t n);
 
+    static std::string Read(int32_t fd, size_t n);
+    static ssize_t Write(int32_t fd, const std::string &str);
+
     /*
      * listen on port, use for server
      * return 0 = ok, -1 = error

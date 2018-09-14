@@ -13,9 +13,9 @@ int main(int argc, char * argv[])
     if(-1 != sockfd) {
         num = 0;
         while(num <= 20) {
+            std::cout << "using tcp::(rw - char)" << std::endl;
             tcp::Write(sockfd, "ping", 4);
-            std::cout << "send msg to server" << std::endl;
-
+            std::cout << "ping" << std::endl;
             rn = tcp::Read(sockfd, rbuff, 1024);
             if(rn < 0) {
                 perror("read");
@@ -27,6 +27,13 @@ int main(int argc, char * argv[])
                 rbuff[rn] = 0;
                 std::cout << rbuff << std::endl;
             }
+
+            std::string str("ping");
+            std::cout << "using tcp::(rw - string)" << std::endl;
+            tcp::Write(sockfd, str);
+            std::cout << "ping" << std::endl;
+            str = tcp::Read(sockfd, 1024);
+            std::cout << str << std::endl << std::endl;
 
             sleep(3);
             num++;
