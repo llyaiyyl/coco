@@ -26,6 +26,7 @@ public:
 
     static std::string Read(int32_t fd, size_t n);
     static ssize_t Write(int32_t fd, const std::string &str);
+    static int32_t Close(int32_t fd);
 
     /*
      * listen on port, use for server

@@ -55,6 +55,11 @@ ssize_t tcp::Write(int32_t fd, const std::string &str)
     return write(fd, str.c_str(), str.length());
 }
 
+int32_t tcp::Close(int32_t fd)
+{
+    return close(fd);
+}
+
 int32_t tcp::Listen(uint16_t port)
 {
     int32_t fd, ret;
